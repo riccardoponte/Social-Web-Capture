@@ -1,0 +1,29 @@
+// manifest.json -- AGGIUNTO IL PERMESSO "unlimitedStorage"
+{
+  "manifest_version": 3,
+  "name": "Havas Social Competitive",
+  "version": "2.0",
+  "description": "Analisi competitiva social: cattura screenshot, estrae metriche e genera report PPT/Excel automatizzati.",
+  "permissions": [
+    "tabs",
+    "downloads",
+    "scripting",
+    "storage",
+    "unlimitedStorage",
+    "offscreen"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Scraper & PPT Generator"
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

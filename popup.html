@@ -1,0 +1,3630 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Havas Social Competitive 2.0</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Libre+Baskerville:ital,wght@0,400..700;1,400..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+
+    <!-- Manteniamo le librerie necessarie -->
+    <script src="xlsx.full.min.js"></script>
+    <script src="jszip.min.js"></script>
+    <script src="pptxgen.bundle.js"></script>
+    <script src="jspdf.umd.min.js"></script>
+    <script src="crop-canvas.js"></script>
+    <!-- ExcelJS per esportazione con immagini (LOCALE) -->
+    <script src="exceljs.min.js"></script>
+    <!-- Il tuo script principale -->
+    <!-- Custom Dialog Modal -->
+    <div id="custom-dialog-modal" class="modal">
+        <div class="modal-content dialog-content">
+            <div id="dialog-icon" class="dialog-icon">ℹ️</div>
+            <h2 id="dialog-title" class="dialog-title">Messaggio</h2>
+            <p id="dialog-message" class="dialog-message"></p>
+            <input type="text" id="dialog-input" class="dialog-input" style="display: none;">
+            <div class="dialog-actions">
+                <button id="dialog-cancel-btn" class="dialog-btn dialog-btn-cancel"
+                    style="display: none;">Annulla</button>
+                <button id="dialog-confirm-btn" class="dialog-btn dialog-btn-confirm">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="meta_library.js" defer></script>
+    <script src="popup.js" defer></script>
+
+    <style>
+        :root {
+            /* --- TEMA SCURO (DEFAULT) --- */
+            --bg-color: #000000;
+            --sidebar-bg: rgba(0, 0, 0, 0.95);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --input-bg: #111111;
+            --card-bg: #1a1a1a;
+
+            --text-primary: #ffffff;
+            --text-secondary: #bbbbbb;
+
+            --border-color: #333333;
+            --shadow-color: rgba(0, 0, 0, 0.9);
+            --hover-bg: #222222;
+
+            /* Havas Branding */
+            --havas-red: #E50000;
+            --havas-dark-red: #c00000;
+            --havas-white: #FFFFFF;
+        }
+
+        /* --- TEMA CHIARO --- */
+        [data-theme="light"] {
+            --bg-color: #ffffff;
+            --sidebar-bg: rgba(255, 255, 255, 0.95);
+            --glass-border: rgba(0, 0, 0, 0.15);
+            --input-bg: #f8f9fa;
+            --card-bg: #ffffff;
+
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+
+            --border-color: #dee2e6;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --hover-bg: #f8f9fa;
+
+            /* Havas Branding rimane invariato */
+            --havas-red: #E50000;
+            --havas-dark-red: #c00000;
+            --havas-white: #FFFFFF;
+        }
+
+        /* Light theme specific overrides */
+        [data-theme="light"] .thumbnail-container {
+            background: #ffffff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="light"] .ai-chat-header,
+        [data-theme="light"] header {
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="light"] .ai-chat-message-bubble.assistant {
+            background: #f8f9fa;
+            border-color: #dee2e6;
+            color: #212529;
+        }
+
+        [data-theme="light"] .dialog-content {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+        }
+
+        [data-theme="light"] .dialog-title {
+            color: var(--text-primary);
+        }
+
+        [data-theme="light"] .dialog-message {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="light"] .dialog-input {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        [data-theme="light"] .dialog-btn-cancel {
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        /* Fix text colors in light mode */
+        [data-theme="light"] .app-title {
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="light"] main h1 {
+            color: var(--text-primary) !important;
+        }
+
+        /* Theme toggle button */
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .theme-toggle svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Applicazione Font Libre Baskerville ai titoli */
+        h1,
+        h2,
+        h3,
+        h4,
+        .app-title,
+        .brand-name {
+            font-family: "Libre Baskerville", serif;
+            font-weight: 400;
+            /* O 700 per bold */
+        }
+
+        /* Override specifici per il tema nero fisso */
+        .thumbnail-container {
+            background: #222;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .ai-chat-header,
+        header {
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .ai-chat-message-bubble.assistant {
+            background: #1a1a1a;
+            border-color: #333;
+            color: #eee;
+        }
+
+        .input-container {
+            background: var(--input-bg);
+            border-color: var(--border-color);
+        }
+
+        .sidebar-btn {
+            color: #eee;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            /* Libre Baskerville applicato ovunque */
+            font-family: "Libre Baskerville", serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Font specifico per codice e output tecnici */
+        pre,
+        code,
+        .ai-chat-message pre,
+        #aiOutputText {
+            font-family: 'Google Sans Code', monospace !important;
+        }
+
+
+        /* Scrollbar Moderni */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d1d1d1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--havas-red);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            /* Usa la variabile dinamica */
+            color: var(--text-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Header --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            z-index: 50;
+            background: var(--sidebar-bg);
+            /* Usa la variabile */
+            backdrop-filter: blur(5px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+        }
+
+        .nav-left,
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .icon-btn:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .icon-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .app-title {
+            font-family: "Libre Baskerville", serif;
+            font-weight: 400;
+            /* Regular per maggiore eleganza */
+            font-size: 1.2rem;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #ffffff;
+            /* Forza il bianco */
+        }
+
+        .havas-logo {
+            height: 24px;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100%;
+            background-color: var(--sidebar-bg);
+            /* Usa la variabile */
+            backdrop-filter: blur(12px);
+            /* Effetto vetro */
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            /* Animazione più fluida */
+            z-index: 100;
+            padding: 20px;
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            box-shadow: 10px 0 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 20px;
+        }
+
+        .sidebar-section h4 {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+
+        .sidebar-btn {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 5px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+            font-size: 13px;
+            /* AGGIUNTO PER UNIFORMARE BUTTON E LABEL */
+            font-weight: 600;
+        }
+
+        .sidebar-btn:hover {
+            background-color: var(--hover-bg);
+            border-color: var(--text-secondary);
+        }
+
+        .sidebar-btn.primary {
+            background-color: var(--havas-red);
+            border-color: var(--havas-red);
+            color: white;
+        }
+
+        .sidebar-btn.primary:hover {
+            background-color: var(--havas-dark-red);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 90;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* --- Main Layout --- */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+            /* Aggiunge fluidità quando il contenuto si sposta */
+            transition: justify-content 0.3s ease;
+        }
+
+        /* Classe per centrare verticalmente quando non c'è la galleria */
+        main.centered-layout {
+            justify-content: center;
+            padding-bottom: 100px;
+            /* Un piccolo offset visivo per non averlo troppo in basso */
+        }
+
+        /* --- Input Section (The "Chat Box") --- */
+        .input-wrapper {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        /* Modalità per scegliere Desk vs Direct */
+        .mode-toggles {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            justify-content: center;
+        }
+
+        .mode-label {
+            cursor: pointer;
+            padding: 5px 15px;
+            border-radius: 20px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mode-label input {
+            display: none;
+        }
+
+        .mode-label:has(input:checked) {
+            background: rgba(229, 0, 0, 0.15);
+            border-color: var(--havas-red);
+            color: var(--havas-red);
+        }
+
+        .input-container {
+            background-color: var(--input-bg);
+            border-radius: 24px;
+            /* Bordi molto arrotondati */
+            padding: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+            /* Ombra morbida e diffusa */
+            transition: all 0.3s ease;
+        }
+
+        .input-container:focus-within {
+            border-color: rgba(229, 0, 0, 0.3);
+            box-shadow: 0 15px 40px -10px rgba(229, 0, 0, 0.15);
+            /* Glow rosso leggero */
+            transform: translateY(-2px);
+        }
+
+        textarea#textUrls {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1rem;
+            resize: vertical;
+            outline: none;
+            min-height: 50px;
+            font-family: inherit;
+        }
+
+        .input-actions {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* File Upload nascosto ma triggerato dall'icona */
+        #excelFile {
+            display: none;
+        }
+
+        .submit-btn {
+            background-color: var(--havas-red);
+            color: white;
+            border-radius: 50%;
+            /* Cerchio perfetto */
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* Effetto molla */
+            box-shadow: 0 4px 15px rgba(229, 0, 0, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: scale(1.1);
+            background-color: var(--havas-dark-red);
+            box-shadow: 0 8px 20px rgba(229, 0, 0, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background-color: #e0e0e0;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .submit-btn:disabled {
+            background-color: #444;
+            cursor: not-allowed;
+        }
+
+        /* Status Bar */
+        #status {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin: 10px 0;
+            min-height: 20px;
+            font-style: italic;
+        }
+
+        /* Stili per i Chips Inline nel box di input */
+        .prompt-chips-inline {
+            display: flex;
+            gap: 6px;
+            margin-left: 10px;
+            overflow-x: auto;
+            align-items: center;
+            /* Nascondi la scrollbar ma mantieni lo scroll */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .prompt-chips-inline::-webkit-scrollbar {
+            display: none;
+        }
+
+        .prompt-chip-inline {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 4px 10px;
+            font-size: 11px;
+            cursor: pointer;
+            white-space: nowrap;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .prompt-chip-inline:hover {
+            background: var(--havas-red);
+            color: white;
+            border-color: var(--havas-red);
+        }
+
+        /* --- Upload Zone (Hidden - Excel import now via attachment button) --- */
+        .upload-zone {
+            display: none;
+        }
+
+        .upload-zone-icon,
+        .upload-zone-text,
+        .upload-zone-subtext {
+            display: none;
+        }
+
+        /* --- Gallery Section --- */
+        #gallery-wrapper {
+            width: 100%;
+            max-width: 1200px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Filtri (Pills) */
+        #filter-buttons-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .filter-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-btn:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+
+        .filter-btn.active {
+            background: var(--havas-red);
+            color: white;
+            border-color: var(--havas-red);
+        }
+
+        .social-icon {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+            pointer-events: none;
+        }
+
+        .social-icon[stroke] {
+            fill: none;
+        }
+
+        .filter-btn {
+            /* Mantiene gli stili base esistenti ma aggiunge flex per centrare icone */
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            /* Colore icona inattiva */
+            padding: 6px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .filter-btn:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+            /* Colore icona hover */
+        }
+
+        .filter-btn.active {
+            background: var(--havas-red);
+            color: white !important;
+            /* Colore icona attiva: BIANCO */
+            border-color: var(--havas-red);
+        }
+
+        /* Container Screenshot */
+        #screenshots-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            padding: 10px;
+            overflow-y: visible;
+        }
+
+        /* Thumbnails - Light Mode */
+        /* --- NUOVA BRAND SECTION DESIGN (Havas Style) --- */
+        .brand-section {
+            width: 100%;
+            margin-bottom: 25px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .brand-header {
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            /* Forza un look antracite elegante invece dei colori casuali */
+            background: #1a1a1a !important;
+            border-bottom: 1px solid var(--border-color);
+            /* Accento Rosso Havas sulla sinistra */
+            border-left: 4px solid var(--havas-red);
+        }
+
+        .brand-name-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-name {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .brand-count {
+            font-size: 11px;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .brand-actions-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-edit-btn {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #eee !important;
+            padding: 6px 12px !important;
+            border-radius: 6px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            transition: all 0.2s ease !important;
+            cursor: pointer;
+            opacity: 1 !important;
+            text-shadow: none !important;
+        }
+
+        .brand-edit-btn:hover {
+            background: var(--havas-red) !important;
+            border-color: var(--havas-red) !important;
+            color: white !important;
+            transform: translateY(-1px);
+        }
+
+        .brand-edit-btn svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            stroke-width: 2.5;
+        }
+
+        .brand-action-sep {
+            width: 1px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            margin: 0 4px;
+        }
+
+        .brand-edit-btn.delete-group:hover {
+            background: #d32f2f !important;
+        }
+
+        .brand-screenshots {
+            padding: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        /* NUOVO: Brand Stats Bar */
+        .brand-stats-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #141414 0%, #1c1c1c 100%);
+            border-bottom: 1px solid rgba(229, 0, 0, 0.15);
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .brand-stat-item {
+            flex: 1;
+            min-width: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 8px;
+            gap: 3px;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .brand-stat-item:last-child {
+            border-right: none;
+        }
+
+        .brand-stat-item:hover {
+            background: rgba(229, 0, 0, 0.08);
+        }
+
+        .brand-stat-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--havas-red);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .brand-stat-item:hover::after {
+            width: 60%;
+        }
+
+        .brand-stat-icon {
+            width: 16px;
+            height: 16px;
+            line-height: 1;
+            color: currentColor;
+        }
+
+        .brand-stat-label {
+            font-size: 9px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 500;
+        }
+
+        .brand-stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.5px;
+        }
+
+        .thumbnail-container {
+            position: relative;
+            width: 160px;
+            height: 120px;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid var(--havas-red);
+            /* Contorno rosso di default */
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            background: #ffffff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .thumbnail-container:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            z-index: 5;
+        }
+
+        .thumbnail-container.selected {
+            border-color: var(--havas-red);
+            box-shadow: 0 0 10px rgba(229, 0, 0, 0.4);
+        }
+
+        .thumbnail {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.85;
+            transition: opacity 0.2s;
+        }
+
+        .thumbnail-container:hover .thumbnail {
+            opacity: 1;
+        }
+
+        /* Icone overlay sulle thumbnail */
+        .select-checkbox {
+            -webkit-appearance: none;
+            /* Rimuove lo stile di default del browser */
+            appearance: none;
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 24px;
+            height: 24px;
+            background-color: white;
+            /* Sfondo bianco per massima visibilità */
+            border: 2px solid white;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        /* Quando è selezionato: Sfondo Rosso Havas */
+        .select-checkbox:checked {
+            background-color: #E50000;
+            border-color: #E50000;
+        }
+
+        /* Disegna la spunta bianca quando è selezionato */
+        .select-checkbox:checked::after {
+            content: '✔';
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        /* Effetto hover per feedback immediato */
+        .select-checkbox:hover {
+            transform: scale(1.1);
+            background-color: #eee;
+        }
+
+        .select-checkbox:checked:hover {
+            background-color: #ff0000;
+        }
+
+        .delete-icon {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            cursor: pointer;
+        }
+
+        .thumbnail-container:hover .delete-icon {
+            opacity: 1;
+        }
+
+        .ungroup-icon {
+            position: absolute;
+            top: 5px;
+            right: 30px;
+            background: rgba(0, 123, 255, 0.9);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            cursor: pointer;
+        }
+
+        .thumbnail-container:hover .ungroup-icon {
+            opacity: 1;
+        }
+
+        .group-badge {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+
+        /* Stile per il badge delle metriche */
+        .metrics-badge {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            font-size: 10px;
+            display: flex;
+            justify-content: space-around;
+            padding: 4px 2px;
+            backdrop-filter: blur(2px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 4;
+        }
+
+        .metrics-badge span {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            font-weight: 600;
+        }
+
+        /* Sposta il badge del gruppo in alto se ci sono metriche */
+        .thumbnail-container:has(.metrics-badge) .group-badge {
+            bottom: 25px;
+        }
+
+        /* NUOVO: Caption Badge */
+        .caption-badge {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 16px;
+            padding: 4px 6px;
+            border-radius: 4px;
+            z-index: 5;
+            cursor: help;
+            backdrop-filter: blur(2px);
+        }
+
+        .caption-badge:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        /* NUOVO: Modal Dettaglio Brand */
+        .brand-detail-content {
+            width: 95vw;
+            height: 90vh;
+            max-width: none;
+            max-height: none;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-detail-table-container {
+            flex: 1;
+            overflow: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        #brand-detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        #brand-detail-table th,
+        #brand-detail-table td {
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        #brand-detail-table th {
+            background: var(--havas-red);
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        #brand-detail-table tr:nth-child(even) {
+            background: rgba(229, 0, 0, 0.05);
+        }
+
+        .preview-cell {
+            width: 80px;
+            text-align: center;
+        }
+
+        .detail-preview-img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .caption-cell,
+        .hashtags-cell {
+            max-width: 200px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .caption-cell {
+            max-width: 300px;
+        }
+
+        /* Sposta il badge del gruppo in alto se ci sono caption */
+        .thumbnail-container:has(.caption-badge) .group-badge {
+            bottom: 25px;
+        }
+
+        /* Sposta il badge del gruppo ancora più in alto se ci sono sia metriche che caption */
+        .thumbnail-container:has(.metrics-badge):has(.caption-badge) .group-badge {
+            bottom: 45px;
+        }
+
+        /* Border colors for platforms - Rimossi per bordo rosso globale */
+
+        /* Category filters */
+        #category-filter-buttons-container {
+            display: none;
+            gap: 5px;
+            margin-top: 5px;
+            justify-content: center;
+        }
+
+        .category-btn {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 8px;
+            background: #333;
+            color: #ccc;
+            border: none;
+            cursor: pointer;
+        }
+
+        .category-btn.active {
+            background: var(--havas-dark-red);
+            color: white;
+        }
+
+        /* --- Custom Dialog Modal --- */
+        #custom-dialog-modal {
+            z-index: 2000;
+        }
+
+        .dialog-content {
+            width: 400px;
+            text-align: center;
+            padding: 30px;
+            background: #121212;
+            border: 1px solid var(--havas-red);
+            box-shadow: 0 0 30px rgba(229, 0, 0, 0.2);
+        }
+
+        .dialog-icon {
+            font-size: 40px;
+            margin-bottom: 20px;
+            color: var(--havas-red);
+        }
+
+        .dialog-title {
+            font-family: "Libre Baskerville", serif;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .dialog-message {
+            font-size: 1rem;
+            margin-bottom: 25px;
+            color: #ccc;
+            line-height: 1.5;
+        }
+
+        .dialog-input {
+            width: 100%;
+            padding: 12px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: white;
+            margin-bottom: 20px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .dialog-input:focus {
+            border-color: var(--havas-red);
+        }
+
+        .dialog-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .dialog-btn {
+            padding: 10px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .dialog-btn-confirm {
+            background: var(--havas-red);
+            color: white;
+        }
+
+        .dialog-btn-confirm:hover {
+            background: var(--havas-dark-red);
+            transform: translateY(-2px);
+        }
+
+        .dialog-btn-cancel {
+            background: #333;
+            color: #eee;
+        }
+
+        .dialog-btn-cancel:hover {
+            background: #444;
+            transform: translateY(-2px);
+        }
+
+        /* --- Modals (Adattati Dark) --- */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            z-index: 100;
+        }
+
+        .modal-close:hover {
+            color: var(--havas-red);
+        }
+
+        /* Lightbox specific overrides */
+        #lightbox-content {
+            display: flex;
+            justify-content: center;
+        }
+
+        #lightbox-img {
+            max-height: 80vh;
+            max-width: 100%;
+            border-radius: 4px;
+        }
+
+        .lightbox-controls {
+            position: relative;
+            margin-bottom: 20px;
+            background: rgba(30, 30, 30, 0.9);
+            padding: 10px 20px;
+            border-radius: 30px;
+            display: flex;
+            gap: 15px;
+            border: 1px solid var(--border-color);
+            z-index: 100;
+        }
+
+        .lightbox-controls button {
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            background-color: rgba(0, 0, 0, 0.4);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .lightbox-controls button:hover:not(:disabled) {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Navigation buttons */
+        #prevModalButton,
+        #nextModalButton {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #FFFFFF;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            z-index: 1002;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 20px;
+        }
+
+        #prevModalButton:hover,
+        #nextModalButton:hover {
+            background-color: #000000;
+        }
+
+        #prevModalButton {
+            left: 20px;
+        }
+
+        #nextModalButton {
+            right: 20px;
+        }
+
+        /* Utility Icons */
+        svg {
+            width: 20px;
+            height: 20px;
+            stroke-width: 2;
+        }
+
+        .small-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Excel options box */
+        #excel-options-box {
+            display: none !important;
+            /* Forza nascosto sempre */
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        #excel-options-box select {
+            background: var(--input-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        #sheet-preview-container {
+            display: none !important;
+            /* Forza nascosto sempre */
+            margin-top: 10px;
+            max-height: 150px;
+            overflow: auto;
+        }
+
+        #sheet-preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            color: var(--text-primary);
+        }
+
+        #sheet-preview-table th,
+        #sheet-preview-table td {
+            border: 1px solid var(--border-color);
+            padding: 4px 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+
+        #sheet-preview-table th {
+            background-color: var(--input-bg);
+            font-weight: bold;
+        }
+
+        .highlighted-column {
+            background-color: rgba(229, 0, 0, 0.2) !important;
+        }
+
+        /* Options box - hidden but needed for JS */
+        .options-box {
+            display: none;
+        }
+
+        /* Buttons general */
+        button,
+        .button-like {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* PPT Layout selector */
+        .layout-options {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .layout-option label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.2s;
+            background: var(--input-bg);
+        }
+
+        .layout-option input[type="radio"] {
+            display: none;
+        }
+
+        .layout-option input[type="radio"]:checked+label {
+            border-color: var(--havas-red);
+            background-color: rgba(229, 0, 0, 0.1);
+        }
+
+        .layout-preview {
+            width: 70px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            margin-bottom: 5px;
+            border-radius: 3px;
+        }
+
+        .layout-preview rect {
+            fill: var(--havas-red);
+            opacity: 0.7;
+        }
+
+        /* Brand section styling */
+        .brand-name-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-name {
+            font-size: 14px;
+        }
+
+        .brand-edit-btn {
+            background: none;
+            border: none;
+            color: #ffffff !important;
+            cursor: pointer;
+            padding: 2px 6px;
+            margin: 0;
+            opacity: 1 !important;
+            transition: transform 0.2s;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .brand-edit-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .brand-count {
+            font-size: 12px;
+            font-weight: normal;
+            opacity: 0.8;
+        }
+
+
+
+        .noselect {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Notification Banner */
+        #notificationBanner {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            z-index: 2000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* AI Chat styling */
+        .ai-chat-messages {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .ai-message {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .ai-message.bot {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+        }
+
+        .ai-message.user {
+            background: var(--havas-red);
+            color: white;
+            margin-left: 20%;
+        }
+
+        .ai-message pre {
+            white-space: pre-wrap;
+            margin: 10px 0 0 0;
+            padding: 10px;
+            background: var(--input-bg);
+            border-radius: 6px;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* --- AI Chatbot Fullscreen View --- */
+        .ai-chatbot-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--bg-color);
+            /* Sfondo pieno coprente */
+            transform: translateY(100%);
+            /* Sale dal basso elegantemente */
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 4000;
+            /* Valore altissimo per coprire anche l'header principale */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ai-chatbot-panel.open {
+            transform: translateY(0);
+        }
+
+        .ai-chatbot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--havas-red);
+            color: white;
+        }
+
+        .ai-chatbot-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ai-chatbot-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            width: 100%;
+            max-width: 900px;
+            /* Mantiene la chat centrata e leggibile */
+            margin: 0 auto;
+            /* Centra orizzontalmente */
+        }
+
+        .ai-chatbot-prompts {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--card-bg);
+        }
+
+        .ai-chatbot-prompts h4 {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .prompt-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .prompt-chip {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .prompt-chip:hover {
+            background: var(--havas-red);
+            color: white;
+            border-color: var(--havas-red);
+        }
+
+        .ai-chatbot-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .ai-chatbot-input {
+            padding: 15px;
+            border-top: 1px solid var(--border-color);
+            background: var(--card-bg);
+        }
+
+        .ai-chatbot-input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .ai-chatbot-input select {
+            flex: 1;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .ai-chatbot-input textarea {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px;
+            border-radius: 8px;
+            resize: none;
+            min-height: 60px;
+            font-family: inherit;
+        }
+
+        .ai-chatbot-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .ai-chatbot-actions button {
+            flex: 1;
+        }
+
+        .ai-chat-message {
+            padding: 12px 15px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .ai-chat-message.user {
+            background: var(--havas-red);
+            color: white;
+            margin-left: 15%;
+            border-bottom-right-radius: 4px;
+        }
+
+        .ai-chat-message.bot {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            margin-right: 15%;
+            border-bottom-left-radius: 4px;
+        }
+
+        .ai-chat-message pre {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        /* Filter controls in modal */
+        #modal-filter-controls-container {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--input-bg);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .filter-values {
+            max-height: 100px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            padding: 5px;
+            border-radius: 4px;
+            min-width: 150px;
+            background: var(--card-bg);
+        }
+
+        .filter-values label {
+            display: block;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        #fullscreen-preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        #fullscreen-preview-table th,
+        #fullscreen-preview-table td {
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+        }
+
+        #fullscreen-preview-table th {
+            background-color: var(--input-bg);
+        }
+
+        /* === PROMPT MANAGER PANEL === */
+        .prompt-manager-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 380px;
+            height: 100%;
+            background-color: var(--sidebar-bg);
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--border-color);
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .prompt-manager-panel.open {
+            transform: translateX(0);
+        }
+
+        .prompt-manager-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--havas-red);
+            color: white;
+        }
+
+        .prompt-manager-header h3 {
+            font-family: "Libre Baskerville", serif;
+            font-size: 1.1rem;
+            font-weight: 400;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .prompt-manager-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .prompt-manager-actions {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+        }
+
+        .prompt-manager-actions button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .prompt-manager-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .prompt-manager-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: grab;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .prompt-manager-item:hover {
+            border-color: var(--havas-red);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .prompt-manager-item.dragging {
+            opacity: 0.5;
+            background: var(--hover-bg);
+        }
+
+        .prompt-manager-item.hidden-prompt {
+            opacity: 0.5;
+        }
+
+        .prompt-manager-item.hidden-prompt .prompt-item-emoji,
+        .prompt-manager-item.hidden-prompt .prompt-item-name {
+            text-decoration: line-through;
+        }
+
+        .prompt-drag-handle {
+            cursor: grab;
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .prompt-item-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .prompt-item-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .prompt-item-emoji {
+            font-size: 18px;
+            margin-right: 5px;
+        }
+
+        .prompt-item-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .prompt-item-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .prompt-item-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .prompt-item-btn:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+
+        .prompt-item-btn.visibility-btn.hidden {
+            color: var(--text-secondary);
+            opacity: 0.5;
+        }
+
+        .prompt-item-btn.delete-btn:hover {
+            color: #ff4444;
+        }
+
+        /* Prompt Edit Modal */
+        .prompt-edit-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            z-index: 1100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .prompt-edit-modal.open {
+            display: flex;
+        }
+
+        .prompt-edit-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .prompt-edit-content h4 {
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+        }
+
+        .prompt-edit-field {
+            margin-bottom: 15px;
+        }
+
+        .prompt-edit-field label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .prompt-edit-field input,
+        .prompt-edit-field textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .prompt-edit-field textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .prompt-edit-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .prompt-edit-actions button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .prompt-edit-save {
+            background: var(--havas-red);
+            color: white;
+            border: none;
+        }
+
+        .prompt-edit-save:hover {
+            background: var(--havas-dark-red);
+        }
+
+        .prompt-edit-cancel {
+            background: var(--input-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .prompt-edit-cancel:hover {
+            background: var(--hover-bg);
+        }
+
+        /* Book icon button */
+        .book-btn {
+            position: relative;
+        }
+
+        /* Chat History Item Styles */
+        .chat-history-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .chat-history-item:hover {
+            border-color: var(--havas-red);
+            background: var(--hover-bg);
+        }
+
+        .chat-history-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .chat-history-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-history-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .chat-history-actions {
+            display: flex;
+            gap: 5px;
+            opacity: 0.6;
+        }
+
+        .chat-history-item:hover .chat-history-actions {
+            opacity: 1;
+        }
+
+        /* === AI CHAT VIEW === */
+        .ai-chat-view {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            background: var(--bg-color);
+            z-index: 3000;
+            overflow: hidden;
+            border: none;
+            border-radius: 0;
+        }
+
+        .ai-chat-view.active {
+            display: flex;
+        }
+
+        .ai-chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .ai-chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ai-chat-header-info h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .ai-chat-header-info .pdf-name {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            background: var(--input-bg);
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .ai-chat-back-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .ai-chat-back-btn:hover {
+            background: var(--hover-bg);
+            border-color: var(--text-secondary);
+        }
+
+        .ai-chat-messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .ai-chat-message-bubble {
+            max-width: 75%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            font-size: 15px;
+            line-height: 1.6;
+            word-wrap: break-word;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ai-chat-message-bubble.user {
+            align-self: flex-end;
+            background: var(--havas-red);
+            /* O un gradiente: linear-gradient(135deg, #E50000, #c00000) */
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .ai-chat-message-bubble.assistant {
+            align-self: flex-start;
+            background: #ffffff;
+            border: 1px solid #f0f0f0;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .ai-chat-message-bubble.assistant strong {
+            color: var(--havas-red);
+        }
+
+        .ai-chat-message-bubble pre {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 10px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+
+        /* Stile Allegato PDF stile ChatGPT */
+        .chat-attachment {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 0.9rem;
+            max-width: 100%;
+            text-align: left;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .chat-attachment:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Adattamento per bolla utente (che ha sfondo rosso) */
+        .ai-chat-message-bubble.user .chat-attachment {
+            background: rgba(255, 255, 255, 0.15);
+            /* Semi-trasparente su sfondo rosso */
+            border-color: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .ai-chat-message-bubble.user .chat-attachment:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .attachment-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: #FF5252;
+            /* Rosso PDF */
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+
+        .attachment-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .attachment-name {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .attachment-type {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+        }
+
+        .ai-chat-input-area {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border-color);
+            background: var(--sidebar-bg);
+        }
+
+        .ai-chat-input-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .ai-chat-input-row textarea {
+            flex: 1;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px;
+            border-radius: 12px;
+            resize: none;
+            min-height: 50px;
+            max-height: 150px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .ai-chat-send-btn {
+            background: var(--havas-red);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .ai-chat-send-btn:hover:not(:disabled) {
+            background: var(--havas-dark-red);
+            transform: scale(1.05);
+        }
+
+        .ai-chat-send-btn:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        .ai-chat-typing {
+            align-self: flex-start;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .input-wrapper.hidden {
+            display: none;
+        }
+
+        main h1.hidden {
+            display: none;
+        }
+
+        #fullscreen-preview-table th {
+            background-color: var(--input-bg);
+            font-weight: bold;
+        }
+
+        /* Preset manager list item */
+        #preset-manager-list li {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+
+        #preset-manager-list li:hover {
+            background: var(--hover-bg);
+        }
+
+        #preset-manager-list li.active {
+            background: rgba(229, 0, 0, 0.2);
+            border-left: 3px solid var(--havas-red);
+        }
+
+        /* Profile list table */
+        #profile-list-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #profile-list-table th,
+        #profile-list-table td {
+            padding: 8px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        #profile-list-table th {
+            background: var(--input-bg);
+        }
+
+        #profile-list-body tr:hover {
+            background: var(--hover-bg);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Sidebar (Menu e Export) -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span style="font-weight: bold; font-size: 1.2rem;">Menu Gestione</span>
+            <button class="icon-btn" id="close-sidebar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Sezione Esporta nascosta (i pulsanti servono al JS per far funzionare l'export dalla galleria) -->
+        <div class="sidebar-section" style="display: none;">
+            <h4>Esporta</h4>
+            <button id="downloadAllButton" class="sidebar-btn">
+                <img src="https://img.icons8.com/color/48/zip-ae.png" width="20"> Scarica ZIP
+            </button>
+            <button id="generatePptButton" class="sidebar-btn primary">
+                <img src="https://img.icons8.com/color/48/microsoft-powerpoint-2019.png" width="20"> Genera PPT
+            </button>
+            <button id="exportPdfButton" class="sidebar-btn">
+                <img src="https://img.icons8.com/color/48/pdf-2.png" width="20"> Esporta PDF
+            </button>
+            <button id="exportExcelButton" class="sidebar-btn">
+                <img src="https://img.icons8.com/color/48/microsoft-excel-2019.png" width="20"> Esporta Excel
+            </button>
+            <button id="generateBenchmarkButton" class="sidebar-btn" disabled>
+                <img src="https://img.icons8.com/color/48/compare.png" width="20"> Benchmark Strategico
+            </button>
+        </div>
+
+
+
+        <div class="sidebar-section">
+            <h4>Configurazione</h4>
+            <button id="profileListManagerButton" class="sidebar-btn">Gestione Mercati</button>
+            <button id="presetManagerButton" class="sidebar-btn">Gestione Ritagli</button>
+            <button id="pdfHistoryButton" class="sidebar-btn">Storico & AI PDF</button>
+            <button id="pageHistoryButton" class="sidebar-btn">Cronologia Analisi</button>
+        </div>
+
+        <div class="sidebar-section">
+            <h4>Sessione</h4>
+            <button id="clearButton" class="sidebar-btn" style="color: #ff6b6b; border-color: #ff6b6b;">
+                <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" style="width:16px; margin-right:5px;">
+                    <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                </svg>
+                Pulisci Tutto
+            </button>
+        </div>
+    </aside>
+
+    <div class="overlay" id="overlay"></div>
+    <div id="notificationBanner"><span id="notificationText"></span></div>
+
+    <!-- Header Principale -->
+    <header>
+        <div class="nav-left">
+            <button class="icon-btn" id="sidebar-trigger">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                </svg>
+            </button>
+            <div class="app-title"></div>
+        </div>
+        <div class="nav-right">
+            <!-- Theme Toggle Button -->
+            <button id="themeToggle" class="theme-toggle" title="Cambia Tema">
+                <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <!-- Moon icon for dark mode (default) -->
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+
+            <!-- Prompt Manager Toggle (Book Icon) -->
+            <button id="promptManagerToggle" class="icon-btn book-btn" title="Gestione Prompt">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    <line x1="8" y1="6" x2="16" y2="6"></line>
+                    <line x1="8" y1="10" x2="16" y2="10"></line>
+                    <line x1="8" y1="14" x2="12" y2="14"></line>
+                </svg>
+            </button>
+
+            <!-- Chat History Toggle -->
+            <button id="chatHistoryToggle" class="icon-btn" title="Cronologia Chat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </button>
+
+
+            <!-- AI Panel Toggle -->
+
+            <!-- Tasti rapidi azione (Raggruppa / Attribuisci) -->
+            <button id="groupButton" class="icon-btn" title="Raggruppa Selezionati" disabled style="display: none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+            </button>
+            <button id="assignBrandButton" class="icon-btn" title="Attribuisci Brand" disabled
+                style="color: var(--havas-red); display: none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                    <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <h1
+            style="text-align: center; font-size: 3.5rem; color: #ffffff; margin-bottom: 30px; margin-top: 20px; font-weight: 400; font-family: 'Libre Baskerville', serif;">
+            Ciao, come posso aiutarti?</h1>
+        <!-- Area Input (Chat Box Style) -->
+        <div class="input-wrapper">
+            <!-- Upload Zone for Excel -->
+            <div class="upload-zone" id="uploadZone">
+                <img src="https://img.icons8.com/color/96/microsoft-excel-2019.png" alt="Excel"
+                    class="upload-zone-icon">
+                <div class="upload-zone-text">Trascina qui il tuo file Excel</div>
+                <div class="upload-zone-subtext">oppure clicca per selezionare</div>
+                <input type="file" id="excelFile" accept=".xlsx, .xls">
+            </div>
+
+            <!-- Excel options (shown after file load) -->
+            <div id="excel-options-box">
+                <select id="sourceSelector"></select>
+                <select id="columnSelector"></select>
+                <button id="fullscreenPreviewButton" class="icon-btn" title="Anteprima Dati" style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
+                <div id="sheet-preview-container">
+                    <table id="sheet-preview-table"></table>
+                </div>
+            </div>
+
+            <!-- Toggle Modalità -->
+            <div class="mode-toggles">
+                <label class="mode-label" style="display: none;">
+                    <input type="radio" name="executionMode" value="direct" checked>
+                    <span>Link Diretti</span>
+                </label>
+                <label class="mode-label">
+                    <input type="radio" name="executionMode" value="desk">
+                    <span>Social</span>
+                </label>
+                <!-- Modalità Analisi AI rimossa dai toggle superiori -->
+                <label class="mode-label">
+                    <input type="radio" name="executionMode" value="meta_library">
+                    <span>Meta Library</span>
+                </label>
+                <label class="mode-label">
+                    <input type="radio" name="executionMode" value="google_ads">
+                    <span>Google ADS</span>
+                </label>
+            </div>
+
+            <!-- Box Input -->
+            <div class="input-container">
+                <textarea id="textUrls"
+                    placeholder="Incolla qui i link (uno per riga) oppure carica un Excel..."></textarea>
+
+                <div class="input-actions">
+                    <div class="action-group">
+                        <label for="excelFile" class="icon-btn" title="Importa Excel" style="position: relative;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            <span
+                                style="position: absolute; bottom: -2px; right: -2px; font-size: 8px; background: #1D6F42; color: white; padding: 1px 3px; border-radius: 3px;">XLS</span>
+                        </label>
+
+                        <!-- Chips Prompt Inline (Visibili solo in modalità AI) -->
+                        <div id="inlinePrompts" class="prompt-chips-inline" style="display: none;">
+                            <div class="prompt-chip-inline"
+                                data-prompt="Analizza le immagini e identifica i brand presenti">🏷️ Brand</div>
+                            <div class="prompt-chip-inline" data-prompt="Descrivi il contenuto visivo delle immagini">
+                                👁️ Descrivi</div>
+                            <div class="prompt-chip-inline" data-prompt="Estrai i testi presenti nelle immagini">📝
+                                Testi</div>
+                            <div class="prompt-chip-inline" data-prompt="Analizza i colori predominanti">🎨 Colori</div>
+                        </div>
+
+                        <!-- Chips Impostazioni Cattura (Visibili in Desk/Direct) -->
+                        <div id="settingsChips" class="prompt-chips-inline" style="display: flex; gap: 8px;">
+                            <div class="filter-btn" id="chipDelay" title="Ritardo Screenshot (secondi)"
+                                style="font-size: 11px; padding: 4px 10px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    class="social-icon" style="width: 14px; height: 14px;">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                <span>2s</span>
+                            </div>
+                            <div class="filter-btn" id="chipSwipe" title="Ritardo Swipe Carousel (secondi)"
+                                style="font-size: 11px; padding: 4px 10px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    class="social-icon" style="width: 14px; height: 14px;">
+                                    <path d="M23 4v6h-6"></path>
+                                    <path d="M1 20v-6h6"></path>
+                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15">
+                                    </path>
+                                </svg>
+                                <span>3s</span>
+                            </div>
+                            <div class="filter-btn" id="chipMaxSlides" title="Max Slide Carousel"
+                                style="font-size: 11px; padding: 4px 10px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    class="social-icon" style="width: 14px; height: 14px;">
+                                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                                    <polyline points="2 17 12 22 22 17"></polyline>
+                                    <polyline points="2 12 12 17 22 12"></polyline>
+                                </svg>
+                                <span>Mx 10</span>
+                            </div>
+                            <div class="filter-btn" id="chipIGPosts" title="Numero Post Instagram (solo Desk)"
+                                style="display:none; font-size: 11px; padding: 4px 10px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    class="social-icon" style="width: 14px; height: 14px;">
+                                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                                    <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                                </svg>
+                                <span>5</span>
+                            </div>
+                            <div class="filter-btn ig-date-chip" id="chipSocialStartDate"
+                                title="Data Inizio IG (Opzionale)"
+                                style="display:none; font-size: 11px; padding: 4px 10px;">
+                                <span>Data Inizio</span>
+                            </div>
+                            <div class="filter-btn ig-date-chip" id="chipSocialEndDate" title="Data Fine IG (Opzionale)"
+                                style="display:none; font-size: 11px; padding: 4px 10px;">
+                                <span>Data Fine</span>
+                            </div>
+                            <!-- NUOVO: Pulsante Anteprima Excel -->
+                            <button class="filter-btn" id="excelPreviewButton" title="Anteprima Excel"
+                                style="display:none; font-size: 11px; padding: 4px 10px; cursor: pointer; border: 1px solid var(--border-color);">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    class="social-icon" style="width: 14px; height: 14px;">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                                <span>Anteprima XLS</span>
+                            </button>
+                        </div>
+
+                        <!-- Chip e Filtri per Meta Library (Visibili solo in modalità Meta Library) -->
+                        <div id="metaLibraryDates" class="prompt-chips-inline"
+                            style="display: none; gap: 6px; align-items: center;">
+                            <!-- Selezione Paese -->
+                            <select id="metaCountry"
+                                style="background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; font-size: 11px; padding: 3px;">
+                                <option value="IT" selected>IT 🇮🇹</option>
+                                <option value="US">US 🇺🇸</option>
+                                <option value="GB">UK 🇬🇧</option>
+                                <option value="FR">FR 🇫🇷</option>
+                                <option value="DE">DE 🇩🇪</option>
+                                <option value="ES">ES 🇪🇸</option>
+                                <option value="ALL">Tutti</option>
+                            </select>
+
+                            <!-- Stato Annunci -->
+                            <select id="metaStatus"
+                                style="background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; font-size: 11px; padding: 3px;">
+                                <option value="active" selected>Attivi</option>
+                                <option value="all">Tutti (Attivi/Inattivi)</option>
+                            </select>
+
+                            <!-- Tipo Media -->
+                            <select id="metaMediaType"
+                                style="background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; font-size: 11px; padding: 3px;">
+                                <option value="all" selected>Media: Tutti</option>
+                                <option value="image">Immagini</option>
+                                <option value="video">Video</option>
+                            </select>
+
+                            <!-- Date -->
+                            <div class="filter-btn" id="chipStartDate" title="Data Inizio"
+                                style="font-size: 11px; padding: 4px 8px;">
+                                <span>Inizio</span>
+                            </div>
+                            <div class="filter-btn" id="chipEndDate" title="Data Fine"
+                                style="font-size: 11px; padding: 4px 8px;">
+                                <span>Fine</span>
+                            </div>
+                            <!-- Limite Annunci -->
+                            <div class="filter-btn" id="chipMetaMaxAds" title="Limite massimo annunci da catturare"
+                                style="font-size: 11px; padding: 4px 8px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    style="width: 12px; height: 12px; margin-right: 4px;">
+                                    <path d="M12 2v20M2 12h20"></path>
+                                </svg>
+                                <span>Limite: 30</span>
+                            </div>
+                        </div>
+
+                        <!-- Chip e Filtri per Google Ads Library -->
+                        <div id="googleLibraryDates" class="prompt-chips-inline"
+                            style="display: none; gap: 6px; align-items: center;">
+                            <!-- Selezione Paese -->
+                            <select id="googleRegion"
+                                style="background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; font-size: 11px; padding: 3px;">
+                                <option value="IT" selected>IT 🇮🇹</option>
+                                <option value="US">US 🇺🇸</option>
+                                <option value="GB">UK 🇬🇧</option>
+                                <option value="FR">FR 🇫🇷</option>
+                                <option value="DE">DE 🇩🇪</option>
+                                <option value="ES">ES 🇪🇸</option>
+                                <option value="any">Tutti i Paesi</option>
+                            </select>
+
+                            <!-- Piattaforma Google -->
+                            <select id="googlePlatform" class="platform-select"
+                                style="background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; font-size: 11px; padding: 3px 8px 3px 28px; background-repeat: no-repeat; background-position: 6px center; background-size: 16px 16px;">
+                                <option value="all" selected>Piattaforma: Tutte</option>
+                                <option value="SEARCH" data-icon="search">Google Search</option>
+                                <option value="YOUTUBE" data-icon="youtube">YouTube</option>
+                                <option value="MAPS" data-icon="maps">Google Maps</option>
+                                <option value="PLAY" data-icon="play">Google Play</option>
+                                <option value="SHOPPING" data-icon="shopping">Google Shopping</option>
+                            </select>
+
+                            <!-- Formato -->
+                            <select id="googleFormat"
+                                style="background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; font-size: 11px; padding: 3px;">
+                                <option value="all" selected>Format: Tutti</option>
+                                <option value="IMAGE">Immagine</option>
+                                <option value="VIDEO">Video</option>
+                                <option value="TEXT">Testo</option>
+                            </select>
+
+                            <!-- Date (come Meta Library) -->
+                            <div class="filter-btn" id="chipGoogleStartDate" title="Data Inizio"
+                                style="font-size: 11px; padding: 4px 8px;">
+                                <span>Inizio</span>
+                            </div>
+                            <div class="filter-btn" id="chipGoogleEndDate" title="Data Fine"
+                                style="font-size: 11px; padding: 4px 8px;">
+                                <span>Fine</span>
+                            </div>
+
+                            <!-- Limite Annunci -->
+                            <div class="filter-btn" id="chipGoogleMaxAds" title="Limite massimo annunci da catturare"
+                                style="font-size: 11px; padding: 4px 8px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    style="width: 12px; height: 12px; margin-right: 4px;">
+                                    <path d="M12 2v20M2 12h20"></path>
+                                </svg>
+                                <span id="googleMaxAdsText">Limite: 30</span>
+                            </div>
+                        </div>
+
+                        <!-- Selezione PDF Inline (Visibile solo in modalità AI) -->
+                        <div id="inlinePdfSelection" style="display: none; align-items: center; gap: 10px;">
+                            <select id="inlinePdfSelect"
+                                style="background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: 8px; font-size: 13px; min-width: 180px;">
+                                <option value="">Seleziona PDF...</option>
+                            </select>
+                        </div>
+
+
+                        <!-- Input nascosti necessari per il JS originale -->
+                        <div class="options-box">
+                            <input type="checkbox" id="removePopups" checked>
+                            <input type="checkbox" id="captureCarousel" checked>
+                            <input type="checkbox" id="enableZoom" checked>
+                            <input type="number" id="initialDelay" value="1000">
+                            <input type="number" id="screenshotDelay" value="2">
+                            <input type="number" id="carouselSwipeDelay" value="3">
+                            <input type="number" id="maxCarouselSlides" value="10">
+                            <input type="number" id="numInstagramPosts" value="5">
+                        </div>
+                    </div>
+
+                    <button id="startButton" class="submit-btn" disabled title="Avvia Processo">
+                        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" class="small-icon">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="status">In attesa di input...</div>
+        </div>
+
+        <!-- AI Chat View -->
+        <div class="ai-chat-view" id="aiChatView">
+            <div class="ai-chat-header">
+                <div class="ai-chat-header-info">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        style="width: 20px; height: 20px; color: var(--havas-red);">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <div>
+                        <h3>Chat con Gemini AI</h3>
+                        <span class="pdf-name" id="aiChatPdfName">PDF non selezionato</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="ai-chat-back-btn" id="aiChatExportBtn" title="Esporta la conversazione in PDF"
+                        style="border-color: #4CAF50; color: #4CAF50;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            style="width: 16px; height: 16px; stroke: #4CAF50;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Esporta Chat
+                    </button>
+                    <button class="ai-chat-back-btn" id="aiChatBackBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 16px; height: 16px;">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                        Torna Indietro
+                    </button>
+                </div>
+            </div>
+            <div class="ai-chat-messages-container" id="aiChatMessagesContainer">
+                <!-- Messages will be added here dynamically -->
+            </div>
+            <div class="ai-chat-input-area">
+                <div class="ai-chat-input-row">
+                    <textarea id="aiChatInput" placeholder="Scrivi un messaggio..."></textarea>
+                    <button class="ai-chat-send-btn" id="aiChatSendBtn">
+                        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width: 20px; height: 20px;">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Area Galleria -->
+        <div id="gallery-wrapper">
+            <!-- Filtri -->
+            <div id="filter-buttons-container">
+                <button class="filter-btn active" data-filter="instagram" title="Instagram">
+                    <svg viewBox="0 0 24 24" fill="currentColor" class="social-icon">
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" fill="none" stroke="var(--bg-color)"
+                            stroke-width="2"></path>
+                        <circle cx="17.5" cy="6.5" r="1" fill="var(--bg-color)"></circle>
+                    </svg>
+                </button>
+                <button class="filter-btn" data-filter="facebook" title="Facebook">
+                    <svg viewBox="0 0 24 24" fill="currentColor" class="social-icon">
+                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                    </svg>
+                </button>
+                <button class="filter-btn" data-filter="tiktok" title="TikTok">
+                    <svg viewBox="0 0 24 24" fill="currentColor" class="social-icon">
+                        <path
+                            d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+                    </svg>
+                </button>
+                <button id="undoGlobalCropButton" class="filter-btn"
+                    style="display: none; background-color: #E50000; color: white; border-color: #c00000;"
+                    title="Annulla l'ultima operazione di ritaglio globale">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="social-icon">
+                        <path d="M3 10h10a5 5 0 0 1 5 5v2"></path>
+                        <polyline points="3 6 3 12 9 12"></polyline>
+                    </svg>
+                    Annulla
+                </button>
+            </div>
+            <!-- Filtri Categorie (Dinamici) -->
+            <div id="category-filter-buttons-container"></div>
+
+            <!-- Pulsanti Export Rapidi nella Galleria (Riordinati) -->
+            <div id="gallery-export-buttons"
+                style="display: none; margin: 15px 0; padding: 12px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); gap: 10px; flex-wrap: wrap; justify-content: center;">
+
+                <button id="galleryHistoryBtn" class="filter-btn"
+                    style="background: #ffffff; color: #1a1a1a; border: 1px solid #cccccc; padding: 8px 16px; font-size: 13px; font-weight: bold;"
+                    title="Apri lo storico delle pagine visitate">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" style="width: 18px; height: 18px; margin-right: 6px;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Cronologia Pagine
+                </button>
+
+                <button id="galleryExportPptBtn" class="filter-btn"
+                    style="background: #D24726; color: white; padding: 8px 16px; font-size: 13px; font-weight: bold;"
+                    title="Genera Presentazione PowerPoint">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" style="width: 18px; height: 18px; margin-right: 6px;">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                        <path d="M7 13l3-3 3 3 4-4"></path>
+                        <polyline points="13 9 17 9 17 13"></polyline>
+                    </svg>
+                    Genera PPT
+                </button>
+
+                <button id="galleryExportExcelBtn" class="filter-btn"
+                    style="background: #217346; color: white; padding: 8px 16px; font-size: 13px; font-weight: bold;"
+                    title="Esporta tabella Excel con immagini">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" style="width: 18px; height: 18px; margin-right: 6px;">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="3" y1="9" x2="21" y2="9"></line>
+                        <line x1="3" y1="15" x2="21" y2="15"></line>
+                        <line x1="9" y1="9" x2="9" y2="21"></line>
+                        <line x1="15" y1="9" x2="15" y2="21"></line>
+                    </svg>
+                    Esporta Excel
+                </button>
+
+                <button id="galleryExportPdfBtn" class="filter-btn"
+                    style="background: var(--havas-red); color: white; padding: 8px 16px; font-size: 13px; font-weight: bold;"
+                    title="Esporta la galleria in PDF">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" style="width: 18px; height: 18px; margin-right: 6px;">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <!-- P -->
+                        <path d="M9 15L9 11L11 11A1 1 0 0 1 11 13L9 13"></path>
+                        <!-- D -->
+                        <path d="M13 15L13 11L14 11A2 2 0 0 1 14 15L13 15"></path>
+                        <!-- F -->
+                        <path d="M17 11L17 15"></path>
+                        <path d="M17 13L18.5 13"></path>
+                        <path d="M17 11L19 11"></path>
+                    </svg>
+                    Esporta PDF
+                </button>
+
+                <button id="galleryAiAnalysisBtn" class="filter-btn"
+                    style="background: linear-gradient(135deg, #111111 0%, #333333 100%); color: white; padding: 8px 16px; font-size: 13px; font-weight: bold; border-color: #555; box-shadow: 0 0 10px rgba(255,255,255,0.1);"
+                    title="Analizza i risultati con Gemini AI">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="width: 18px; height: 18px; margin-right: 6px;">
+                        <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z"></path>
+                    </svg>
+                    Analisi AI
+                </button>
+
+            </div>
+
+            <!-- Griglia Screenshot -->
+            <div id="screenshots-container">
+                <!-- Le thumbnail verranno generate qui dal JS -->
+            </div>
+        </div>
+
+        <!-- AI Analysis Panel Section (Hidden - replaced by chatbot panel) -->
+        <div id="aiPanelSection" style="display: none;"></div>
+    </main>
+
+    <!-- AI Chatbot Right Panel -->
+    <aside class="ai-chatbot-panel" id="aiChatbotPanel">
+        <div class="ai-chatbot-header">
+            <h3>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="width: 20px; height: 20px;">
+                    <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z"></path>
+                </svg>
+                Analisi AI
+            </h3>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button id="aiChatbotExportPdfBtn" title="Esporta conversazione in PDF"
+                    style="color: #000000; border: 1px solid #000000; border-radius: 8px; padding: 6px 12px; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; background: #ffffff; cursor: pointer;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        style="width: 16px; height: 16px; stroke: #000000;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Esporta PDF
+                </button>
+                <button class="icon-btn" id="closeAiChatbot" style="color: white;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="ai-chatbot-body">
+            <!-- Quick Prompts Section -->
+            <div class="ai-chatbot-prompts">
+                <h4>Prompt Rapidi</h4>
+                <div class="prompt-chips" id="aiPromptChips">
+                    <button class="prompt-chip" data-prompt="Analizza le immagini e identifica i brand presenti">🏷️
+                        Identifica Brand</button>
+                    <button class="prompt-chip" data-prompt="Descrivi il contenuto visivo delle immagini">👁️ Descrivi
+                        Contenuto</button>
+                    <button class="prompt-chip" data-prompt="Estrai i testi presenti nelle immagini">📝 Estrai
+                        Testi</button>
+                    <button class="prompt-chip" data-prompt="Analizza i colori predominanti">🎨 Analizza Colori</button>
+                    <button class="prompt-chip" data-prompt="Identifica il tipo di post social">📱 Tipo Post</button>
+                </div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div class="ai-chatbot-messages" id="aiChatbotMessages">
+                <div class="ai-chat-message bot">
+                    <strong>Assistente AI</strong><br>
+                    Ciao! Sono pronto ad analizzare i tuoi PDF. Seleziona un documento dallo storico e usa uno dei
+                    prompt rapidi o scrivi la tua richiesta.
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="ai-chatbot-input"
+                style="padding: 20px; border-top: 1px solid var(--border-color); background: var(--card-bg);">
+
+                <!-- Riga superiore: Selezione PDF -->
+                <div class="ai-chatbot-input-row" style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <select id="aiChatbotPdfSelect"
+                        style="flex: 1; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 10px; border-radius: 8px; font-size: 13px; outline: none;">
+                        <option value="">Seleziona PDF...</option>
+                    </select>
+                    <button id="aiChatbotHistoryBtn" class="icon-btn" title="Apri Storico PDF"
+                        style="background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 0 15px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 18px; height: 18px;">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                            <path d="M3 3v5h5"></path>
+                            <path d="M12 7v5l4 2"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Riga inferiore: Textarea + Bottone Invio -->
+                <div style="display: flex; gap: 12px; align-items: flex-end;">
+                    <textarea id="aiChatbotPromptInput"
+                        placeholder="Scrivi il tuo prompt o usa i suggerimenti in alto..."
+                        style="flex: 1; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 15px; border-radius: 12px; resize: none; height: 55px; font-family: inherit; font-size: 14px; outline: none;"></textarea>
+
+                    <button id="aiChatbotSendBtn" class="sidebar-btn primary"
+                        style="width: 55px; height: 55px; margin: 0; padding: 0; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 15px rgba(229,0,0,0.3); border: none;">
+                        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width: 22px; height: 22px;">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Bottoni nascosti per compatibilità JS -->
+                <div style="display: none;">
+                    <button id="aiChatbotDownloadCsv" class="sidebar-btn">📊 CSV</button>
+                    <button id="aiChatbotDownloadWord" class="sidebar-btn">📄 Word</button>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Overlay for AI Chatbot -->
+    <div class="overlay" id="aiChatbotOverlay"></div>
+
+    <!-- Prompt Manager Panel -->
+    <aside class="prompt-manager-panel" id="promptManagerPanel">
+        <div class="prompt-manager-header">
+            <h3>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 20px; height: 20px;">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                Gestione Prompt
+            </h3>
+            <button class="icon-btn" id="closePromptManager" style="color: white;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="prompt-manager-body">
+            <div class="prompt-manager-actions">
+                <button id="addNewPromptBtn" class="sidebar-btn primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 16px; height: 16px;">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Nuovo Prompt
+                </button>
+                <button id="savePromptOrderBtn" class="sidebar-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 16px; height: 16px;">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    Salva
+                </button>
+            </div>
+            <div class="prompt-manager-list" id="promptManagerList">
+                <!-- Prompt items will be rendered here -->
+            </div>
+        </div>
+    </aside>
+
+    <!-- Overlay for Prompt Manager -->
+    <div class="overlay" id="promptManagerOverlay"></div>
+
+    <!-- Chat History Panel -->
+    <aside class="prompt-manager-panel" id="chatHistoryPanel">
+        <div class="prompt-manager-header">
+            <h3>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 20px; height: 20px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                Cronologia Chat
+            </h3>
+            <button class="icon-btn" id="closeChatHistory" style="color: white;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="prompt-manager-body">
+            <div style="padding: 15px; border-bottom: 1px solid var(--border-color);">
+                <input type="text" id="chatHistorySearch" placeholder="Cerca chat..."
+                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-primary);">
+            </div>
+            <div class="prompt-manager-list" id="chatHistoryList">
+                <!-- Chat items will be rendered here -->
+            </div>
+        </div>
+    </aside>
+    <!-- Overlay for Chat History -->
+    <div class="overlay" id="chatHistoryOverlay"></div>
+
+    <!-- Prompt Edit Modal -->
+    <div class="prompt-edit-modal" id="promptEditModal">
+        <div class="prompt-edit-content">
+            <h4 id="promptEditTitle">Nuovo Prompt</h4>
+            <div class="prompt-edit-field">
+                <label for="promptEditName">Nome</label>
+                <input type="text" id="promptEditName" placeholder="Es: Identifica Brand">
+            </div>
+            <div class="prompt-edit-field">
+                <label for="promptEditEmoji">Emoji</label>
+                <input type="text" id="promptEditEmoji" placeholder="Es: 🏷️" maxlength="4">
+            </div>
+            <div class="prompt-edit-field">
+                <label for="promptEditText">Testo del Prompt</label>
+                <textarea id="promptEditText"
+                    placeholder="Es: Analizza le immagini e identifica i brand presenti"></textarea>
+            </div>
+            <div class="prompt-edit-actions">
+                <button class="prompt-edit-cancel" id="promptEditCancel">Annulla</button>
+                <button class="prompt-edit-save" id="promptEditSave">Salva</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Modale Lightbox / Crop -->
+    <div id="lightbox-modal" class="modal">
+        <span id="lightbox-close" class="modal-close">&times;</span>
+        <button id="prevModalButton" title="Precedente (←)">&#10094;</button>
+        <button id="nextModalButton" title="Successivo (→)">&#10095;</button>
+
+        <div class="modal-content"
+            style="background:transparent; border:none; box-shadow:none; width:auto; max-width:95%; display: flex; flex-direction: column; align-items: center;">
+
+            <!-- Controls moved to top -->
+            <div class="lightbox-controls">
+                <button id="cropButton" class="icon-button" title="Ritaglia">&#9986;</button>
+                <button id="globalCropButton" class="icon-button" title="Ritaglia Tutti (Sito)">&#9986;&#9986;</button>
+
+                <button id="saveCropButton" class="icon-button save" style="display:none;"
+                    title="Salva Ritaglio">&#10004;</button>
+                <button id="undoCropButton" class="icon-button" style="display:none;"
+                    title="Annulla Ritaglio">&#8634;</button>
+
+                <button id="deleteModalButton" class="icon-button delete" title="Elimina"
+                    style="color:#F44336;">&#10006;</button>
+
+                <!-- Preset Controls -->
+                <div style="border-left:1px solid #555; padding-left:10px; display:flex; gap:5px; align-items: center;">
+                    <select id="cropPresetSelector"
+                        style="background:#333; color:white; border:none; border-radius:4px; padding:5px;">
+                        <option value="">Preset...</option>
+                    </select>
+                    <button id="saveAsPresetButton" class="icon-button" style="display:none;"
+                        title="Salva Preset">💾</button>
+                    <button id="deletePresetButton" class="icon-button" style="display:none; color:#F44336;"
+                        title="Elimina Preset">🗑️</button>
+                </div>
+            </div>
+
+            <div id="lightbox-content">
+                <img id="lightbox-img">
+            </div>
+
+            <!-- NUOVO: Area Caption -->
+            <div id="lightbox-caption"
+                style="display: none; margin-top: 15px; max-width: 80%; text-align: center; background: rgba(0,0,0,0.8); padding: 10px 15px; border-radius: 8px; color: #fff; font-size: 14px; line-height: 1.4;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale Manager Preset -->
+    <div id="preset-manager-modal" class="modal">
+        <div class="modal-content"
+            style="width: 98vw; height: 98vh; max-width: none; max-height: none; display: flex; gap: 20px;">
+            <span id="preset-manager-close" class="modal-close">&times;</span>
+            <div
+                style="flex:1; border-right:1px solid var(--border-color); padding-right: 15px; display: flex; flex-direction: column;">
+                <h4 style="color: var(--havas-red); margin-bottom: 15px;">Preset Salvati</h4>
+                <div style="margin-bottom:10px; display:flex; gap:5px;">
+                    <button id="exportPresetsButton" class="sidebar-btn" style="flex:1;">Esporta</button>
+                    <label for="importPresetsInput" class="sidebar-btn"
+                        style="flex:1; cursor:pointer; text-align: center;">Importa</label>
+                    <input type="file" id="importPresetsInput" accept=".json" style="display:none;">
+                </div>
+                <ul id="preset-manager-list" style="list-style:none; flex: 1; overflow-y:auto; padding: 0; margin: 0;">
+                </ul>
+            </div>
+            <div style="flex:2; display: flex; flex-direction: column;" id="preset-manager-details-view">
+                <div id="preset-manager-placeholder"
+                    style="color:var(--text-secondary); text-align:center; margin:auto;">Seleziona un preset</div>
+                <input type="text" id="preset-manager-name"
+                    style="display:none; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border-color); padding: 8px; border-radius: 4px; margin-bottom: 10px;">
+                <div style="display: none; text-align: center; gap: 10px; justify-content: center; margin-bottom: 20px;"
+                    id="preset-manager-actions">
+                    <button id="preset-manager-save" class="sidebar-btn primary" style="width: auto;">Salva
+                        Modifiche</button>
+                    <button id="preset-manager-adjust" class="sidebar-btn" style="width: auto;">Modifica
+                        Ritaglio</button>
+                    <button id="preset-manager-delete" class="sidebar-btn"
+                        style="width: auto; background: #d32f2f; border-color: #d32f2f;">Elimina</button>
+                </div>
+                <div style="display: flex; gap: 15px; justify-content: center; margin-bottom: 15px;">
+                    <div id="preset-original-image-wrapper"
+                        style="display:none; position: relative; border: 1px solid var(--border-color); text-align: center; background: #ffffff; padding: 10px; border-radius: 8px;">
+                        <strong style="display: block; margin-bottom: 5px; color: #000;">Originale</strong>
+                        <img id="preset-original-image"
+                            style="max-width:300px; max-height:300px; display:block; margin: 0 auto;">
+                    </div>
+                    <div style="display:none; text-align: center; background: #ffffff; padding: 10px; border-radius: 8px; border: 2px dashed var(--havas-red);"
+                        id="preset-cropped-wrapper">
+                        <strong style="display: block; margin-bottom: 5px; color: #000;">Ritagliato</strong>
+                        <img id="preset-cropped-image"
+                            style="max-width:300px; max-height:300px; display:block; margin: 0 auto;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale Manager Profili IG -->
+    <div id="profile-list-manager-modal" class="modal">
+        <div class="modal-content"
+            style="width: 98vw; height: 98vh; max-width: none; max-height: none; display:flex; flex-direction:column;">
+            <span id="profile-list-manager-close" class="modal-close">&times;</span>
+            <h3 style="color:var(--havas-red); margin-bottom:15px;">Gestione Mercati</h3>
+
+            <!-- Barra superiore: gestione liste + azioni globali -->
+            <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; align-items:center;">
+                <select id="marketListSelector"
+                    style="background:var(--input-bg); color:var(--text-primary); border:1px solid var(--border-color); padding:8px 12px; border-radius:6px; font-size:0.9rem; min-width:180px;"></select>
+                <button id="addMarketListBtn" class="sidebar-btn" style="width:auto;" title="Nuova lista">＋ Nuova
+                    Lista</button>
+                <button id="renameMarketListBtn" class="sidebar-btn" style="width:auto;" title="Rinomina lista">✏️
+                    Rinomina</button>
+                <button id="deleteMarketListBtn" class="sidebar-btn" style="width:auto; color:#e57373;"
+                    title="Elimina lista">🗑 Elimina Lista</button>
+                <div style="flex:1;"></div>
+                <button id="exportProfileListButton" class="sidebar-btn" style="width:auto;">⬇ Esporta</button>
+                <label for="importProfileListInput" class="sidebar-btn" style="cursor:pointer; width:auto;">⬆ Importa
+                    CSV/Excel</label>
+                <input type="file" id="importProfileListInput" accept=".csv, .xlsx, .xls" style="display:none;">
+                <button id="addAllProfilesToQueueButton" class="sidebar-btn primary" style="width:auto;">▶ Aggiungi
+                    Tutti alla Coda</button>
+            </div>
+
+            <!-- Tabella profili della lista corrente -->
+            <div
+                style="flex:1; overflow-y:auto; margin-bottom:15px; border:1px solid var(--border-color); border-radius:8px;">
+                <table id="profile-list-table" style="width:100%; border-collapse:collapse;">
+                    <thead style="position:sticky; top:0; background:var(--card-bg); z-index:1;">
+                        <tr>
+                            <th
+                                style="padding:10px; text-align:left; border-bottom:2px solid var(--border-color); color:var(--text-primary); width:60px;">
+                                Piattaforma</th>
+                            <th
+                                style="padding:10px; text-align:left; border-bottom:2px solid var(--border-color); color:var(--text-primary);">
+                                Nome</th>
+                            <th
+                                style="padding:10px; text-align:left; border-bottom:2px solid var(--border-color); color:var(--text-primary);">
+                                URL Profilo</th>
+                            <th
+                                style="padding:10px; text-align:center; border-bottom:2px solid var(--border-color); color:var(--text-primary); width:120px;">
+                                Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="profile-list-body"></tbody>
+                </table>
+            </div>
+
+            <!-- Form aggiunta/modifica profilo -->
+            <form id="add-profile-form"
+                style="display:flex; gap:10px; align-items:flex-end; border-top:1px solid var(--border-color); padding-top:15px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:120px;">
+                    <label
+                        style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:4px;">Nome</label>
+                    <input type="text" id="profile-name"
+                        style="width:100%; background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-primary); padding:8px; border-radius:4px;">
+                </div>
+                <div style="flex:2; min-width:200px;">
+                    <label style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:4px;">URL
+                        Profilo</label>
+                    <input type="text" id="profile-url" placeholder="https://www.instagram.com/..."
+                        style="width:100%; background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-primary); padding:8px; border-radius:4px;">
+                </div>
+                <div style="min-width:120px;">
+                    <label
+                        style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:4px;">Piattaforma
+                        <span style="color:#888;">(auto)</span></label>
+                    <input type="text" id="profile-platform" placeholder="es. Instagram" readonly
+                        style="width:100%; background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-secondary); padding:8px; border-radius:4px; cursor:default;">
+                </div>
+                <button type="submit" id="add-profile-btn" class="sidebar-btn primary"
+                    style="width:auto;">Aggiungi</button>
+                <button type="button" id="cancel-edit-profile-btn" class="sidebar-btn"
+                    style="width:auto; display:none;">Annulla</button>
+                <h4 id="profile-form-title" style="display:none;"></h4>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modale Preview Excel (Fullscreen) -->
+    <div id="preview-modal" class="modal" style="display: none;">
+        <div class="modal-content"
+            style="width: 95vw; max-width: 95vw; height: 95vh; max-height: 95vh; display: flex; flex-direction: column; margin: auto;">
+            <span id="preview-modal-close" class="modal-close">&times;</span>
+            <h3 style="color: var(--havas-red); margin-bottom: 15px;">Anteprima Excel</h3>
+
+            <!-- Controlli Selezione Foglio e Colonna -->
+            <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label for="modalSourceSelector"
+                        style="font-weight: 600; color: var(--text-primary);">Foglio:</label>
+                    <select id="modalSourceSelector"
+                        style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-primary); min-width: 150px;"></select>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label for="modalColumnSelector" style="font-weight: 600; color: var(--text-primary);">Colonna
+                        URL:</label>
+                    <select id="modalColumnSelector"
+                        style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-primary); min-width: 150px;"></select>
+                </div>
+            </div>
+
+            <div id="modal-filter-controls-container" style="margin-bottom: 15px;">
+                <h4 style="margin-bottom: 10px;">Filtri</h4>
+                <div id="filter-rows"></div>
+                <button id="addFilterButton" class="sidebar-btn" style="width:auto; margin-top: 10px;">+ Filtro</button>
+            </div>
+            <div style="flex: 1; overflow: auto; border: 1px solid var(--border-color); border-radius: 8px;">
+                <table id="fullscreen-preview-table"></table>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+    </div>
+
+    <!-- Modale AI Analysis -->
+    <div id="aiAnalysisModal" class="modal">
+        <div class="modal-content"
+            style="width: 98vw; height: 98vh; max-width: none; max-height: none; display: flex; flex-direction: column;">
+            <span id="aiAnalysisClose" class="modal-close">&times;</span>
+            <h3 style="color:var(--havas-red); margin-bottom: 15px;">Analisi AI & Storico PDF</h3>
+            <div style="display:flex; flex:1; gap:20px; overflow:hidden;">
+                <div
+                    style="flex:1; border-right:1px solid var(--border-color); padding-right:15px; display:flex; flex-direction:column;">
+                    <input type="text" id="pdfSearchInput" placeholder="Cerca PDF..."
+                        style="background:var(--input-bg); border:1px solid var(--border-color); padding:10px; color:var(--text-primary); border-radius:4px; margin-bottom:10px;">
+                    <ul id="pdfList" style="flex:1; overflow-y:auto; list-style:none; padding: 0; margin: 0;"></ul>
+                </div>
+                <div style="flex:2; display:flex; flex-direction:column;">
+                    <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap: wrap;">
+                        <select id="aiPdfSelect"
+                            style="background:var(--input-bg); color:var(--text-primary); border:1px solid var(--border-color); padding: 8px; border-radius: 4px; flex: 1;"></select>
+                        <button id="runAiAnalysisButton" class="sidebar-btn primary" style="width:auto;">Analizza con
+                            Gemini AI</button>
+                        <button id="exportAiAnalysisPdfBtn" class="sidebar-btn"
+                            style="width:auto; border-color:#000000; color:#000000; background:#ffffff;"
+                            title="Esporta analisi in PDF">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                style="width:16px; height:16px; stroke:#000000;">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Esporta PDF
+                        </button>
+                    </div>
+                    <div style="flex:1; background:#fff; border-radius:4px; overflow:hidden; position:relative;">
+                        <iframe id="pdfPreviewFrame" style="width:100%; height:100%; border:none;"></iframe>
+                        <div id="pdfPreviewPlaceholder"
+                            style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#333;">
+                            Seleziona un PDF</div>
+                    </div>
+                    <div id="aiAnalysisResults"
+                        style="display:none; max-height:150px; background:var(--input-bg); margin-top:10px; padding:10px; overflow-y:auto; border-radius:4px;">
+                        <pre id="aiOutputText"
+                            style="white-space:pre-wrap; font-family:monospace; font-size:0.9rem; margin: 0;"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale Cronologia Pagine -->
+    <div id="page-history-modal" class="modal">
+        <div class="modal-content"
+            style="width: 98vw; height: 98vh; max-width: none; max-height: none; display: flex; flex-direction: column;">
+            <span id="page-history-close" class="modal-close">&times;</span>
+            <h3 style="color:var(--havas-red); margin-bottom: 15px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="width:24px; height:24px; vertical-align: middle; margin-right: 8px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                Cronologia Pagine Visitate
+            </h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="text" id="historySearchInput" placeholder="Cerca nella cronologia..."
+                    style="flex: 1; background:var(--input-bg); border:1px solid var(--border-color); padding:10px; color:var(--text-primary); border-radius:4px;">
+                <button id="clearHistoryButton" class="sidebar-btn"
+                    style="width: auto; background: #d32f2f; border-color: #d32f2f; color: white;">
+                    Pulisci Cronologia
+                </button>
+            </div>
+            <div
+                style="flex: 1; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg);">
+                <table id="page-history-table" style="width: 100%; border-collapse: collapse;">
+                    <thead style="position: sticky; top: 0; background: var(--card-bg); z-index: 1;">
+                        <tr>
+                            <th
+                                style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color); color: var(--text-primary);">
+                                Data/Ora</th>
+                            <th
+                                style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color); color: var(--text-primary);">
+                                Piattaforma</th>
+                            <th
+                                style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color); color: var(--text-primary);">
+                                URL</th>
+                            <th
+                                style="padding: 12px; text-align: center; border-bottom: 2px solid var(--border-color); color: var(--text-primary);">
+                                Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="page-history-body">
+                        <tr>
+                            <td colspan="4" style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                                Nessuna pagina nella cronologia
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale Benchmark Strategico Multiplo - PROPORZIONI CORRETTE -->
+    <div id="benchmark-modal" class="modal">
+        <div class="modal-content"
+            style="width: 90vw; height: 85vh; max-width: 1200px; max-height: 800px; display: flex; flex-direction: column; padding: 30px; border-radius: 12px; border: 1px solid var(--havas-red); background: var(--bg-color); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+            <span id="close-benchmark-modal" class="modal-close"
+                style="font-size: 30px; top: 15px; right: 20px;">&times;</span>
+
+            <h2
+                style="margin-bottom: 20px; color: var(--havas-red); text-align: center; font-family: 'Libre Baskerville', serif; font-size: 1.8rem;">
+                Strategic Benchmarking</h2>
+
+            <!-- Sezione Selezione ridimensionata -->
+            <div
+                style="background: var(--input-bg); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 25px;">
+                <p
+                    style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 15px; text-align: center; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">
+                    Configura un nuovo confronto</p>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 0.7rem; color: var(--havas-red); font-weight: bold;">BRAND A</label>
+                        <select id="benchmark-brand-a"
+                            style="width: 100%; padding: 10px; border-radius: 6px; background: var(--bg-color); color: var(--text-primary); border: 1px solid var(--border-color); font-size: 0.9rem;"></select>
+                    </div>
+
+                    <span
+                        style="font-weight: bold; color: var(--havas-red); font-size: 1.2rem; margin-top: 20px;">VS</span>
+
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 0.7rem; color: var(--havas-red); font-weight: bold;">BRAND B</label>
+                        <select id="benchmark-brand-b"
+                            style="width: 100%; padding: 10px; border-radius: 6px; background: var(--bg-color); color: var(--text-primary); border: 1px solid var(--border-color); font-size: 0.9rem;"></select>
+                    </div>
+
+                    <button id="addBenchmarkPairBtn" class="submit-btn"
+                        style="width: 45px; height: 45px; min-width: 45px; border-radius: 50%; margin-top: 20px;"
+                        title="Aggiungi alla coda">
+                        <span style="font-size: 24px; color: white;">+</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Lista dei confronti pronti -->
+            <div style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                <h4
+                    style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                    <span style="background: var(--havas-red); width: 8px; height: 8px; border-radius: 50%;"></span>
+                    Confronti in coda per il PPT:
+                </h4>
+                <div id="benchmark-queue-list"
+                    style="flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); align-content: start; gap: 10px; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; background: rgba(0,0,0,0.1);">
+                    <p
+                        style="color: #666; font-size: 0.9rem; text-align: center; grid-column: 1 / -1; margin-top: 30px;">
+                        Nessun confronto aggiunto.</p>
+                </div>
+            </div>
+
+            <!-- Pulsante finale compatto -->
+            <div style="padding-top: 20px; text-align: center;">
+                <button id="confirmBenchmarkBtn" class="sidebar-btn primary"
+                    style="width: 400px; justify-content: center; padding: 12px; font-size: 1rem; font-weight: bold; display: none; margin: 0 auto; border-radius: 30px; text-transform: uppercase;">
+                    GENERA PPT MULTI-CONFRONTO
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Elementi nascosti per compatibilità -->
+    <div id="crop-log-container" style="display:none;"></div>
+
+    <!-- Hidden duplicate elements for JS compatibility -->
+    <div style="display: none;">
+        <select id="aiPdfSelect2"></select>
+        <textarea id="aiPromptTextarea"></textarea>
+        <button id="aiSendBtn"></button>
+        <div id="aiChatMessages"></div>
+        <button id="downloadCsvButton2"></button>
+        <button id="downloadWordButton2"></button>
+        <pre id="aiOutputText2"></pre>
+        <div id="aiAnalysisResults2"></div>
+        <button id="runAiAnalysisButton2"></button>
+        <button id="downloadAllButton2"></button>
+        <button id="generatePptButton2"></button>
+        <button id="exportPdfButton2"></button>
+        <div id="aiNewPromptName"></div>
+        <button id="aiSavePromptBtn"></button>
+        <div id="aiPromptsList"></div>
+    </div>
+
+    <!-- Sidebar logic now in popup.js -->
+</body>
+
+</html>
